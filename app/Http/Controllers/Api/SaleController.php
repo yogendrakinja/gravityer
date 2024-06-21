@@ -9,7 +9,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class SaleController extends Controller
 {
-    public function discount(Request $request){
+    public function discount(Request $request)
+    {
         $validateUser = Validator::make(
             $request->all(),
             [
@@ -29,11 +30,12 @@ class SaleController extends Controller
             "rule1" => $this->applyRule1($prices),
             "rule2" => $this->applyRule2($prices),
             "rule3" => $this->applyRule3($prices)
-        ],200);
+        ], 200);
     }
 
     // Apply rule 1 to get dicounted items and payable items
-    private function applyRule1($prices){
+    private function applyRule1($prices)
+    {
         $discountedItems = [];
         $payableItems = [];
 
@@ -53,63 +55,43 @@ class SaleController extends Controller
     }
 
     // Apply rule 2 to get dicounted items and payable items used recursively
-    private function applyRule2($prices, $discountedItems = [],$payableItems = []){
-        $payableItems[] = $prices[0];
-        for ($i = 1; $i < count($prices); $i++) {
-            if (isset($prices[$i]) && $prices[$i] < $prices[0]) {
-                $discountedItems[] = $prices[$i];
-                // Remove used items from the list of prices
-                unset($prices[0]);
-                unset($prices[$i]);
-                $prices = array_values($prices);
-                break;
-            }else{
-                // if last two items are there in prices array
-                if(!isset($prices[$i+1])){
-                    $payableItems[] = $prices[$i];
-                    // Remove used items from the list of prices
-                    unset($prices[0]);
-                    unset($prices[$i]);
+    private function applyRule2($prices)
+    {
+        $discountedItems = $payableItems = [];
+        for ($i = 0; $i < count($prices); $i++) {
+            if (!array_key_exists($i, $payableItems) && !array_key_exists($i, $discountedItems)) {
+                $payableItems[$i] = $prices[$i];
+                for ($j = 1; $j < count($prices); $j++) {
+                    if (!array_key_exists($j, $payableItems) && !array_key_exists($j, $discountedItems) && $prices[$i] > $prices[$j]) {
+                        $discountedItems[$j] = $prices[$j];
+                        break;
+                    }
                 }
             }
         }
-        if (count($prices) == 0) {
-            return [
-                'Discounted Items' => $discountedItems,
-                'Payable Items' => $payableItems
-            ];
-        }
-        // New prices arrray will be returned
-        return $this->applyRule2($prices, $discountedItems, $payableItems);
+        return [
+            "discountedItems" => $discountedItems,
+            "payableItems" => $payableItems,
+        ];
     }
 
-    private function applyRule3($prices, $discountedItems = [],$payableItems = []){
-        $payableItems[] = $prices[0];
-        for ($i = 1; $i < count($prices); $i++) {
-            if (isset($prices[$i]) && $prices[$i] < $prices[0]) {
-                $discountedItems[] = $prices[$i];
-                // Remove used items from the list of prices
-                unset($prices[0]);
-                unset($prices[$i]);
-                $prices = array_values($prices);
-                break;
-            }else{
-                // if last two items are there in prices array
-                if(!isset($prices[$i+1])){
-                    $payableItems[] = $prices[$i];
-                    // Remove used items from the list of prices
-                    unset($prices[0]);
-                    unset($prices[$i]);
+    private function applyRule3($prices)
+    {
+        $$discountedItems = $payableItems = [];
+        for ($i = 0; $i < count($prices); $i++) {
+            if(!array_key_exists($i, $payableItems) && !array_key_exists($i, $discountedItems)){
+                $payableItems[$i] = $prices[$i];
+                for($j=1; $j < count($prices); $j++){
+                    if(!array_key_exists($j, $payableItems) && !array_key_exists($j, $discountedItems) && $prices[$i] > $prices[$j]){
+                        $discountedItems[$j] = $prices[$j];
+                        break;
+                    }
                 }
             }
         }
-        if (count($prices) == 0) {
-            return [
-                'Discounted Items' => $discountedItems,
-                'Payable Items' => $payableItems
-            ];
-        }
-        // New prices arrray will be returned
-        return $this->applyRule3($prices, $discountedItems, $payableItems);
+        return [
+            "discountedItems" => $discountedItems,
+            "payableItems" => $payableItems,
+        ];
     }
 }

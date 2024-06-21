@@ -25,31 +25,11 @@ class SaleController extends Controller
         }
         $prices = $request->prices;
         rsort($prices);
-        // dd($prices);
         return response()->json([
             "rule1" => $this->applyRule1($prices),
-            "rule2" => $this->applyRule2($prices)
+            "rule2" => $this->applyRule2($prices),
+            "rule3" => $this->applyRule3($prices)
         ],200);
-
-        // $discountedItems = [];
-        // $payableItems = [];
-
-        // for ($i = 0; $i < count($prices); $i++) {
-        //     if ($i % 4 == 2 || $i % 4 == 3) {
-        //         if ($i + 1 < count($prices) && $prices[$i] < $prices[$i - 2]) {
-        //             $discountedItems[] = $prices[$i];
-        //         } else {
-        //             $payableItems[] = $prices[$i];
-        //         }
-        //     } else {
-        //         $payableItems[] = $prices[$i];
-        //     }
-        // }
-
-        // dd([
-        //     'Discounted Items' => $discountedItems,
-        //     'Payable Items' => $payableItems
-        // ]);
     }
 
     // Apply rule 1 to get dicounted items and payable items
@@ -72,19 +52,22 @@ class SaleController extends Controller
         ];
     }
 
-    // Apply rule 2 to get dicounted items and payable items
+    // Apply rule 2 to get dicounted items and payable items used recursively
     private function applyRule2($prices, $discountedItems = [],$payableItems = []){
         $payableItems[] = $prices[0];
         for ($i = 1; $i < count($prices); $i++) {
             if (isset($prices[$i]) && $prices[$i] < $prices[0]) {
                 $discountedItems[] = $prices[$i];
+                // Remove used items from the list of prices
                 unset($prices[0]);
                 unset($prices[$i]);
                 $prices = array_values($prices);
                 break;
             }else{
+                // if last two items are there in prices array
                 if(!isset($prices[$i+1])){
                     $payableItems[] = $prices[$i];
+                    // Remove used items from the list of prices
                     unset($prices[0]);
                     unset($prices[$i]);
                 }
@@ -96,9 +79,37 @@ class SaleController extends Controller
                 'Payable Items' => $payableItems
             ];
         }
+        // New prices arrray will be returned
         return $this->applyRule2($prices, $discountedItems, $payableItems);
     }
-    private function applyRule3(){
 
+    private function applyRule3($prices, $discountedItems = [],$payableItems = []){
+        $payableItems[] = $prices[0];
+        for ($i = 1; $i < count($prices); $i++) {
+            if (isset($prices[$i]) && $prices[$i] < $prices[0]) {
+                $discountedItems[] = $prices[$i];
+                // Remove used items from the list of prices
+                unset($prices[0]);
+                unset($prices[$i]);
+                $prices = array_values($prices);
+                break;
+            }else{
+                // if last two items are there in prices array
+                if(!isset($prices[$i+1])){
+                    $payableItems[] = $prices[$i];
+                    // Remove used items from the list of prices
+                    unset($prices[0]);
+                    unset($prices[$i]);
+                }
+            }
+        }
+        if (count($prices) == 0) {
+            return [
+                'Discounted Items' => $discountedItems,
+                'Payable Items' => $payableItems
+            ];
+        }
+        // New prices arrray will be returned
+        return $this->applyRule3($prices, $discountedItems, $payableItems);
     }
 }

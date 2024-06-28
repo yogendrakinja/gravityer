@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Http\Response;
 
 class SaleController extends Controller
 {
@@ -14,7 +14,8 @@ class SaleController extends Controller
         $validateUser = Validator::make(
             $request->all(),
             [
-                'prices' => 'required'
+                'prices' => 'required',
+                "rule" => 'required|in:1,2,3' 
             ]
         );
 
@@ -26,11 +27,13 @@ class SaleController extends Controller
         }
         $prices = $request->prices;
         rsort($prices);
-        return response()->json([
-            "rule1" => $this->applyRule1($prices),
-            "rule2" => $this->applyRule2($prices),
-            "rule3" => $this->applyRule3($prices)
-        ], 200);
+        $rule = "applyRule$request->rule";
+        return response()->json(['data' => $this->$rule($prices)], Response::HTTP_OK);
+        // return response()->json([
+        //     "rule1" => $this->applyRule1($prices),
+        //     "rule2" => $this->applyRule2($prices),
+        //     "rule3" => $this->applyRule3($prices)
+        // ], 200);
     }
 
     // Apply rule 1 to get dicounted items and payable items
@@ -61,7 +64,7 @@ class SaleController extends Controller
         for ($i = 0; $i < count($prices); $i++) {
             if (!array_key_exists($i, $payableItems) && !array_key_exists($i, $discountedItems)) {
                 $payableItems[$i] = $prices[$i];
-                for ($j = 1; $j < count($prices); $j++) {
+                for ($j = $i+1; $j < count($prices); $j++) {
                     if (!array_key_exists($j, $payableItems) && !array_key_exists($j, $discountedItems) && $prices[$i] > $prices[$j]) {
                         $discountedItems[$j] = $prices[$j];
                         break;
@@ -77,11 +80,11 @@ class SaleController extends Controller
 
     private function applyRule3($prices)
     {
-        $$discountedItems = $payableItems = [];
+        $discountedItems = $payableItems = [];
         for ($i = 0; $i < count($prices); $i++) {
             if(!array_key_exists($i, $payableItems) && !array_key_exists($i, $discountedItems)){
                 $payableItems[$i] = $prices[$i];
-                for($j=1; $j < count($prices); $j++){
+                for($j=$i+1; $j < count($prices); $j++){
                     if(!array_key_exists($j, $payableItems) && !array_key_exists($j, $discountedItems) && $prices[$i] > $prices[$j]){
                         $discountedItems[$j] = $prices[$j];
                         break;

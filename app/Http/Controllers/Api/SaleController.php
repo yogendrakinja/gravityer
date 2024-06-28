@@ -14,7 +14,7 @@ class SaleController extends Controller
         $validateUser = Validator::make(
             $request->all(),
             [
-                'prices' => 'required',
+                'prices' => 'required|array',
                 "rule" => 'required|in:1,2,3' 
             ]
         );
@@ -29,11 +29,6 @@ class SaleController extends Controller
         rsort($prices);
         $rule = "applyRule$request->rule";
         return response()->json(['data' => $this->$rule($prices)], Response::HTTP_OK);
-        // return response()->json([
-        //     "rule1" => $this->applyRule1($prices),
-        //     "rule2" => $this->applyRule2($prices),
-        //     "rule3" => $this->applyRule3($prices)
-        // ], 200);
     }
 
     // Apply rule 1 to get dicounted items and payable items
@@ -57,7 +52,7 @@ class SaleController extends Controller
         ];
     }
 
-    // Apply rule 2 to get dicounted items and payable items used recursively
+    // Apply rule 2 to get dicounted items and payable items
     private function applyRule2($prices)
     {
         $discountedItems = $payableItems = [];
@@ -78,6 +73,7 @@ class SaleController extends Controller
         ];
     }
 
+ // Apply rule 3 to get dicounted items and payable items
     private function applyRule3($prices)
     {
         $discountedItems = $payableItems = [];
